@@ -1,9 +1,9 @@
 /*----- constants -----*/
 const cellWidth = 30; //px
 const difficultyParameters = [
-    {difficulty: "easy", gridSize: 9, mines: 10},
-    {difficulty: "medium", gridSize: 16, mines: 40},
-    {difficulty: "hard", gridSize: 22, mines: 99},
+    {difficulty: 'easy', gridSize: 9, mines: 10},
+    {difficulty: 'medium', gridSize: 16, mines: 40},
+    {difficulty: 'hard', gridSize: 22, mines: 99},
 ];
 
 /*----- app's state (variables) -----*/
@@ -13,18 +13,19 @@ let difficultySelected;
 let boardState = [];
 
 /*----- cached element references -----*/
-const diffEl = document.querySelectorAll(".difficulty");
-const resetEl = document.getElementById("reset");
-const messageEl = document.getElementById("message");
-const gameAreaEl = document.getElementById("gameArea");
-const devModeEl = document.getElementById("dev-mode");
-let cellEl  = document.querySelectorAll(".cell");
+const diffEl = document.querySelectorAll('.difficulty');
+const resetEl = document.getElementById('reset');
+const messageEl = document.getElementById('message');
+const totalMinesEl = document.getElementById('mines');
+const gameAreaEl = document.getElementById('gameArea');
+const devModeEl = document.getElementById('dev-mode');
+let cellEl = document.querySelectorAll('.cell');
 
 /*----- event listeners -----*/
-for (let i = 0; i < diffEl.length; i++) {diffEl[i].addEventListener("click", setDifficulty)};
-resetEl.addEventListener("click", init);
-devModeEl.addEventListener("click", revealMines);
-gameAreaEl.addEventListener("click", gridClick);
+for (let i = 0; i < diffEl.length; i++) {diffEl[i].addEventListener('click', setDifficulty)};
+resetEl.addEventListener('click', init);
+devModeEl.addEventListener('click', revealMines);
+gameAreaEl.addEventListener('click', gridClick);
 
 /*----- functions -----*/
 init();
@@ -37,10 +38,12 @@ function init() {
         }
     }
     for (let i = 0; i < diffEl.length; i++) {
-        diffEl[i].addEventListener("click", setDifficulty);
+        diffEl[i].addEventListener('click', setDifficulty);
         diffEl[i].disabled = false;
     };
-    messageEl.textContent = "First, select a difficulty level";
+    messageEl.textContent = 'First, select a difficulty level';
+    totalMinesEl.textContent = '';
+    gameAreaEl.addEventListener('click', gridClick);
 }
 
 function setDifficulty(evt) {
@@ -48,7 +51,7 @@ function setDifficulty(evt) {
     messageEl.textContent = `You have selected ${evt.target.id} difficulty`;
     //now disable the event listener for difficulty selection until this current game is finished
     for (let i = 0; i < diffEl.length; i++) {
-        diffEl[i].removeEventListener("click", setDifficulty);
+        diffEl[i].removeEventListener('click', setDifficulty);
         diffEl[i].disabled = true;
     }
     renderGrid(difficultySelected);
@@ -75,10 +78,10 @@ function renderGrid(difficultySelected) {
         cntJ = 0;
         posLeft = 0;
     }
-    cellEl  = document.querySelectorAll(".cell");
+    cellEl  = document.querySelectorAll('.cell');
     for (let i = 0; i < difficultySelected.gridSize ** 2; i++) {
-        cellEl[i].addEventListener("mouseover", gridHoverOn);
-        cellEl[i].addEventListener("mouseout", gridHoverOff);
+        cellEl[i].addEventListener('mouseover', gridHoverOn);
+        cellEl[i].addEventListener('mouseout', gridHoverOff);
     }
     initBoardState(difficultySelected.gridSize);
     placeMines(difficultySelected);
@@ -91,7 +94,7 @@ function initBoardState(boardSize) {
         boardState[i].id = '';
         boardState[i].hasMine = false; //add more grid properties here as development progresses
         boardState[i].validMove = true;
-        boardState[i].active = true;
+        boardState[i].numPeripheralMines = 0;
     }
     let count = 0;
     let cntI = 0;
@@ -118,7 +121,100 @@ function placeMines(difficultySelected) {
             }
         }
     }
-    renderMines(boardState.filter(element => element.hasMine === true))
+    calcPeripheralMines(difficultySelected);
+    renderMines(boardState.filter(element => element.hasMine === true));
+}
+
+function calcPeripheralMines(difficultySelected) {
+    //There are 9 total cases used to calculate the number of surrounding mines for each cell, regardless of grid size
+    //Case 1 - inside box
+    for (let i = 1; i < difficultySelected.gridSize - 1; i++) {
+        for (let j = 1; j < difficultySelected.gridSize - 1; j++) {
+            let numMines = 0;
+            let currCell = boardState.find(element => element.id === `${i}_${j}`);
+            for (let n = -1; n <= 1; n++) {
+                if (boardState.find(element => element.id === `${i - 1}_${j + n}`).hasMine) {numMines += 1}
+            }
+            for (let m = -1; m <= 1; m++) {
+                if (boardState.find(element => element.id === `${i + 1}_${j + m}`).hasMine) {numMines += 1}
+            }
+            if (boardState.find(element => element.id === `${i}_${j - 1}`).hasMine) {numMines += 1}
+            if (boardState.find(element => element.id === `${i}_${j + 1}`).hasMine) {numMines += 1}
+            currCell.numPeripheralMines = numMines;
+        }
+    }
+    //Case 2 - top row
+    for (i = 1; i < difficultySelected.gridSize - 1; i++) {
+        let numMines = 0;
+        let currCell = boardState.find(element => element.id === `0_${i}`);
+        for (let j = -1; j <= 1; j++) {
+            if (boardState.find(element => element.id === `1_${i + j}`).hasMine) {numMines += 1}
+        }
+        if (boardState.find(element => element.id === `0_${i - 1}`).hasMine) {numMines += 1}
+        if (boardState.find(element => element.id === `0_${i + 1}`).hasMine) {numMines += 1}
+        currCell.numPeripheralMines = numMines;
+    }
+    //Case 3 - bottom row
+    for (i = 1; i < difficultySelected.gridSize - 1; i++) {
+        let numMines = 0;
+        let currCell = boardState.find(element => element.id === `${difficultySelected.gridSize - 1}_${i}`);
+        for (let j = -1; j <= 1; j++) {
+            if (boardState.find(element => element.id === `${difficultySelected.gridSize - 2}_${i + j}`).hasMine) {numMines += 1}
+        }
+        if (boardState.find(element => element.id === `${difficultySelected.gridSize - 1}_${i - 1}`).hasMine) {numMines += 1}
+        if (boardState.find(element => element.id === `${difficultySelected.gridSize - 1}_${i + 1}`).hasMine) {numMines += 1}
+        currCell.numPeripheralMines = numMines;
+    }
+    //Case 4 - left-most column
+    for (i = 1; i < difficultySelected.gridSize - 1; i++) {
+        let numMines = 0;
+        let currCell = boardState.find(element => element.id === `${i}_0`);
+        for (let j = -1; j <= 1; j++) {
+            if (boardState.find(element => element.id === `${i + j}_1`).hasMine) {numMines += 1}
+        }
+        if (boardState.find(element => element.id === `${i - 1}_0`).hasMine) {numMines += 1}
+        if (boardState.find(element => element.id === `${i + 1}_0`).hasMine) {numMines += 1}
+        currCell.numPeripheralMines = numMines;
+    }
+    //Case 5 - right-most column
+    for (i = 1; i < difficultySelected.gridSize - 1; i++) {
+        let numMines = 0;
+        let currCell = boardState.find(element => element.id === `${i}_${difficultySelected.gridSize - 1}`);
+        for (let j = -1; j <= 1; j++) {
+            if (boardState.find(element => element.id === `${i + j}_${difficultySelected.gridSize - 2}`).hasMine) {numMines += 1}
+        }
+        if (boardState.find(element => element.id === `${i - 1}_${difficultySelected.gridSize - 1}`).hasMine) {numMines += 1}
+        if (boardState.find(element => element.id === `${i + 1}_${difficultySelected.gridSize - 1}`).hasMine) {numMines += 1}
+        currCell.numPeripheralMines = numMines;
+    }
+    //Case 6 - top-left corner
+    numMines = 0;
+    currCell = boardState.find(element => element.id === `0_0`);
+    if (boardState.find(element => element.id === `0_1`).hasMine) {numMines += 1}
+    if (boardState.find(element => element.id === `1_0`).hasMine) {numMines += 1}
+    if (boardState.find(element => element.id === `1_1`).hasMine) {numMines += 1}
+    currCell.numPeripheralMines = numMines;
+    //Case 7 - top-right corner
+    numMines = 0;
+    currCell = boardState.find(element => element.id === `0_${difficultySelected.gridSize - 1}`);
+    if (boardState.find(element => element.id === `0_${difficultySelected.gridSize - 2}`).hasMine) {numMines += 1}
+    if (boardState.find(element => element.id === `1_${difficultySelected.gridSize - 1}`).hasMine) {numMines += 1}
+    if (boardState.find(element => element.id === `1_${difficultySelected.gridSize - 2}`).hasMine) {numMines += 1}
+    currCell.numPeripheralMines = numMines;
+    //Case 8 - bottom-left corner
+    numMines = 0;
+    currCell = boardState.find(element => element.id === `${difficultySelected.gridSize - 1}_0`);
+    if (boardState.find(element => element.id === `${difficultySelected.gridSize - 1}_1`).hasMine) {numMines += 1}
+    if (boardState.find(element => element.id === `${difficultySelected.gridSize - 2}_0`).hasMine) {numMines += 1}
+    if (boardState.find(element => element.id === `${difficultySelected.gridSize - 2}_1`).hasMine) {numMines += 1}
+    currCell.numPeripheralMines = numMines;
+    //Case 9 - bottom-right corner
+    numMines = 0;
+    currCell = boardState.find(element => element.id === `${difficultySelected.gridSize - 1}_${difficultySelected.gridSize - 1}`);
+    if (boardState.find(element => element.id === `${difficultySelected.gridSize - 1}_${difficultySelected.gridSize - 2}`).hasMine) {numMines += 1}
+    if (boardState.find(element => element.id === `${difficultySelected.gridSize - 2}_${difficultySelected.gridSize - 1}`).hasMine) {numMines += 1}
+    if (boardState.find(element => element.id === `${difficultySelected.gridSize - 2}_${difficultySelected.gridSize - 2}`).hasMine) {numMines += 1}
+    currCell.numPeripheralMines = numMines;
 }
 
 //might do a class toggle instead (element.classList.toggle(hasMine)), assign hasMine to the HTML element in placeMines function
@@ -130,23 +226,24 @@ function renderMines(hasMineArray){
 }
 
 function renderTotalMines(numMines) {
-    document.getElementById('mines').textContent = `Total mines: ${numMines}`;
+    totalMinesEl.textContent = `Total mines: ${numMines}`;
 }
 
 function gridClick(evt) {
-    if (evt.target.classList.contains("cell")) {placeMarker(evt.target)};
+    if (evt.target.classList.contains('cell')) {placeMarker(evt.target)};
     return;
 }
 
 function placeMarker(targetCell) {
+    messageEl.textContent = "";
     let validMove = checkBoardState(targetCell.id)
     if (validMove) {
-        //checkMine() -> triggers instant loss if mine
-    targetCell.textContent = "O";
-    targetCell.style.fontSize = '25px';
-    targetCell.style.textAlign = 'center';
-    targetCell.classList.toggle("hover");
-    updateBoardState(targetCell.id);
+        checkMine(targetCell.id);
+        targetCell.textContent = boardState.find(element => element.id === targetCell.id).numPeripheralMines;
+        targetCell.style.fontSize = '25px';
+        targetCell.style.textAlign = 'center';
+        targetCell.classList.toggle('hover');
+        updateBoardState(targetCell.id);
     // checkWin();
     // if (gameOver) {return};
     } else {
@@ -162,22 +259,40 @@ function checkBoardState(cellId) {
 function updateBoardState(cellId) {
     const cellState = boardState.find(element => element.id === cellId);
     cellState.validMove = false;
-    cellState.active = false;
 }
 
 function gridHoverOn(evt) {
-    if (evt.target.className === "cell") {
+    if (evt.target.className === 'cell') {
         const cellState = boardState.find(element => element.id === evt.target.id);
-        if (cellState.active === true) {
-            evt.target.classList.toggle("hover");
+        if (cellState.validMove) {
+            evt.target.classList.toggle('hover');
         }
     }
 }
 
 function gridHoverOff(evt) {
-    if (evt.target.className === "cell hover") {
-        evt.target.classList.toggle("hover");
+    if (evt.target.className === 'cell hover') {
+        evt.target.classList.toggle('hover');
     }
+}
+
+function checkMine(cellId) {
+    const cellState = boardState.find(element => element.id === cellId);
+    if (cellState.hasMine) {
+        //reveal image of mine
+        messageEl.textContent = 'You hit a mine. Game over';
+        gameAreaEl.removeEventListener('click', gridClick)
+        for (let i = 0; i < difficultySelected.gridSize ** 2; i++) {
+            cellEl[i].removeEventListener('mouseover', gridHoverOn);
+            cellEl[i].removeEventListener('mouseout', gridHoverOff);
+        }
+    }
+}
+
+function plantFlag() {
+    // need event listerner for right clicik
+    // toggle class to .flag, and replace text content with F
+    // make it so it is invalid move until flag is planted
 }
 
 function revealMines() {
@@ -189,6 +304,7 @@ function revealMines() {
 // x 2. add boardState property of validMove, default is true, once clicked it should be false -> change cell colour for now
 // x 3. add hover effect for validMove = true cells
 
-// 4. detect if bomb is triggered -> triggers game win loss condition
-// 5. reveal number of bombs in surrounding cells
+// x 4. detect if bomb is triggered -> triggers game win loss condition
+// x 5. reveal number of bombs in surrounding cells
+
 // 6. right click to place flags -> toggle right-clickable status but only if cell is validMove = true
