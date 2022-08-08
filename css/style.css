@@ -1,4 +1,4 @@
-.block {
+.cell {
     box-sizing: border-box;
     border: 1px solid black;
     height: 30px;
@@ -11,4 +11,8 @@
     display: block;
     /* width: 100%; */
     height: 30px;
+}
+
+.hover {
+    background-color: #e6e6e6;
 }

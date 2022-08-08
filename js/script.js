@@ -18,11 +18,13 @@ const resetEl = document.getElementById("reset");
 const messageEl = document.getElementById("message");
 const gameAreaEl = document.getElementById("gameArea");
 const devModeEl = document.getElementById("dev-mode");
+let cellEl  = document.querySelectorAll(".cell");
 
 /*----- event listeners -----*/
 for (let i = 0; i < diffEl.length; i++) {diffEl[i].addEventListener("click", setDifficulty)};
 resetEl.addEventListener("click", init);
 devModeEl.addEventListener("click", revealMines);
+gameAreaEl.addEventListener("click", gridClick);
 
 /*----- functions -----*/
 init();
@@ -61,7 +63,7 @@ function renderGrid(difficultySelected) {
         row.className = 'row';
         for (let j = 0; j < difficultySelected.gridSize; j++) {
             let block = document.createElement('div');
-            block.classList.add('block');
+            block.classList.add('cell');
             block.id = `${cntI}_${cntJ}`;
             row.append(block);
             posLeft = j*cellWidth + 10;
@@ -73,8 +75,14 @@ function renderGrid(difficultySelected) {
         cntJ = 0;
         posLeft = 0;
     }
+    cellEl  = document.querySelectorAll(".cell");
+    for (let i = 0; i < difficultySelected.gridSize ** 2; i++) {
+        cellEl[i].addEventListener("mouseover", gridHoverOn);
+        cellEl[i].addEventListener("mouseout", gridHoverOff);
+    }
     initBoardState(difficultySelected.gridSize);
     placeMines(difficultySelected);
+    renderTotalMines(difficultySelected.mines)
 }
 
 function initBoardState(boardSize) {
@@ -82,6 +90,8 @@ function initBoardState(boardSize) {
         boardState.push({});
         boardState[i].id = '';
         boardState[i].hasMine = false; //add more grid properties here as development progresses
+        boardState[i].validMove = true;
+        boardState[i].active = true;
     }
     let count = 0;
     let cntI = 0;
@@ -117,15 +127,57 @@ function renderMines(hasMineArray){
     hasMineArray.forEach(function(el) {
         document.getElementById(el.id).textContent = 'X' //change this to a graphic of a mine later
     })
-    console.log(hasMineArray)
 }
 
-function checkBoardState() {
-
+function renderTotalMines(numMines) {
+    document.getElementById('mines').textContent = `Total mines: ${numMines}`;
 }
 
-function updateBoardState() {
+function gridClick(evt) {
+    if (evt.target.classList.contains("cell")) {placeMarker(evt.target)};
+    return;
+}
 
+function placeMarker(targetCell) {
+    let validMove = checkBoardState(targetCell.id)
+    if (validMove) {
+        //checkMine() -> triggers instant loss if mine
+    targetCell.textContent = "O";
+    targetCell.style.fontSize = '25px';
+    targetCell.style.textAlign = 'center';
+    targetCell.classList.toggle("hover");
+    updateBoardState(targetCell.id);
+    // checkWin();
+    // if (gameOver) {return};
+    } else {
+        messageEl.textContent = 'Pick another cell';
+    }
+}
+
+function checkBoardState(cellId) {
+    const cellState = boardState.find(element => element.id === cellId);
+    return cellState.validMove
+}
+
+function updateBoardState(cellId) {
+    const cellState = boardState.find(element => element.id === cellId);
+    cellState.validMove = false;
+    cellState.active = false;
+}
+
+function gridHoverOn(evt) {
+    if (evt.target.className === "cell") {
+        const cellState = boardState.find(element => element.id === evt.target.id);
+        if (cellState.active === true) {
+            evt.target.classList.toggle("hover");
+        }
+    }
+}
+
+function gridHoverOff(evt) {
+    if (evt.target.className === "cell hover") {
+        evt.target.classList.toggle("hover");
+    }
 }
 
 function revealMines() {
@@ -133,9 +185,10 @@ function revealMines() {
 }
 
 // Next steps:
-// 1. Display Total no of bombs to be cleared
-// 2. add boardState property of validMove, default is true, once clicked it should be false -> change cell colour for now
-// 3. add hover effect for validMove = true cells
+// x 1. Display Total no of bombs to be cleared
+// x 2. add boardState property of validMove, default is true, once clicked it should be false -> change cell colour for now
+// x 3. add hover effect for validMove = true cells
+
 // 4. detect if bomb is triggered -> triggers game win loss condition
 // 5. reveal number of bombs in surrounding cells
 // 6. right click to place flags -> toggle right-clickable status but only if cell is validMove = true
