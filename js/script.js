@@ -8,15 +8,17 @@ const difficultyParameters = [
 
 /*----- app's state (variables) -----*/
 let gameOver = false;
-let validMove;
 let difficultySelected;
 let boardState = [];
+let cellsRemaining;
+let flagsPlanted;
 
 /*----- cached element references -----*/
 const diffEl = document.querySelectorAll('.difficulty');
 const resetEl = document.getElementById('reset');
 const messageEl = document.getElementById('message');
 const totalMinesEl = document.getElementById('mines');
+const flagsEl = document.getElementById('flags')
 const gameAreaEl = document.getElementById('gameArea');
 const devModeEl = document.getElementById('dev-mode');
 let cellEl = document.querySelectorAll('.cell');
@@ -26,11 +28,16 @@ for (let i = 0; i < diffEl.length; i++) {diffEl[i].addEventListener('click', set
 resetEl.addEventListener('click', init);
 devModeEl.addEventListener('click', revealMines);
 gameAreaEl.addEventListener('click', gridClick);
+document.addEventListener('contextmenu', event => event.preventDefault());
+gameAreaEl.addEventListener('mouseup', plantFlag);
 
 /*----- functions -----*/
 init();
 
 function init() {
+    flagsPlanted = 0;
+    flagsEl.textContent = 'Flags used: ';
+    totalMinesEl.textContent = 'Total mines: ';
     boardState = [];
     if (difficultySelected) {
         for (let i = 0; i < difficultySelected.gridSize; i++) {
@@ -42,7 +49,6 @@ function init() {
         diffEl[i].disabled = false;
     };
     messageEl.textContent = 'First, select a difficulty level';
-    totalMinesEl.textContent = '';
     gameAreaEl.addEventListener('click', gridClick);
 }
 
@@ -54,6 +60,7 @@ function setDifficulty(evt) {
         diffEl[i].removeEventListener('click', setDifficulty);
         diffEl[i].disabled = true;
     }
+    cellsRemaining = (difficultySelected.gridSize ** 2) - difficultySelected.mines;
     renderGrid(difficultySelected);
 }
 
@@ -95,6 +102,7 @@ function initBoardState(boardSize) {
         boardState[i].hasMine = false; //add more grid properties here as development progresses
         boardState[i].validMove = true;
         boardState[i].numPeripheralMines = 0;
+        boardState[i].hasFlag = false;
     }
     let count = 0;
     let cntI = 0;
@@ -238,18 +246,22 @@ function placeMarker(targetCell) {
     messageEl.textContent = "";
     let validMove = checkBoardState(targetCell.id)
     if (validMove) {
+        if (targetCell.classList.contains('flag')) {
+            messageEl.textContent = 'Clear the flag first';
+            return;
+        }
         checkMine(targetCell.id);
         targetCell.textContent = boardState.find(element => element.id === targetCell.id).numPeripheralMines;
         targetCell.style.fontSize = '25px';
         targetCell.style.textAlign = 'center';
         targetCell.classList.toggle('hover');
         updateBoardState(targetCell.id);
-    // checkWin();
-    // if (gameOver) {return};
+        checkWinCondition();
+    if (gameOver) {return};
     } else {
         messageEl.textContent = 'Pick another cell';
     }
-}
+ }
 
 function checkBoardState(cellId) {
     const cellState = boardState.find(element => element.id === cellId);
@@ -289,10 +301,35 @@ function checkMine(cellId) {
     }
 }
 
-function plantFlag() {
-    // need event listerner for right clicik
-    // toggle class to .flag, and replace text content with F
-    // make it so it is invalid move until flag is planted
+function checkWinCondition() {
+    if (boardState.filter(element => element.validMove === false).length === cellsRemaining) {
+        messageEl.textContent = 'You Win!';
+        gameAreaEl.removeEventListener('click', gridClick)
+        for (let i = 0; i < difficultySelected.gridSize ** 2; i++) {
+            cellEl[i].removeEventListener('mouseover', gridHoverOn);
+            cellEl[i].removeEventListener('mouseout', gridHoverOff);
+        }
+    }
+}
+
+function plantFlag(evt) {
+    if (evt.button === 2 && evt.target.classList.contains('cell')) {
+        const cellState = boardState.find(element => element.id === evt.target.id);
+        if (!cellState.hasFlag && cellState.validMove) {
+            cellState.hasFlag = true;
+            evt.target.classList.toggle('flag');
+            evt.target.textContent = 'F';
+            flagsPlanted += 1;
+            flagsEl.textContent = `Flags used: ${flagsPlanted}`;
+            evt.target.classList.toggle('hover');
+        } else if (cellState.hasFlag && cellState.validMove) {
+            cellState.hasFlag = false;
+            evt.target.classList.toggle('flag');
+            evt.target.textContent = '';
+            flagsPlanted -= 1;
+            flagsEl.textContent = `Flags used: ${flagsPlanted}`;
+        }
+    };
 }
 
 function revealMines() {
@@ -307,4 +344,5 @@ function revealMines() {
 // x 4. detect if bomb is triggered -> triggers game win loss condition
 // x 5. reveal number of bombs in surrounding cells
 
-// 6. right click to place flags -> toggle right-clickable status but only if cell is validMove = true
+// x 5.5. Added a function to check win condition -> has the player revealed ALL non-mine tiles? if so then game is won
+// x 6. right click to place flags -> toggle right-clickable status but only if cell is validMove = true
