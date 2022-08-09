@@ -7,7 +7,7 @@
     border: 1px solid black;
     height: 30px;
     width: 30px;
-    display:inline-block;
+    display: flex;
     position: absolute;
 }
 
@@ -19,4 +19,11 @@
 
 .hover {
     background-color: #e6e6e6;
+}
+
+.imgMine {
+    display: block;
+    height: 28px;
+    width: 28px;
+    margin: auto;
 }

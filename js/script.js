@@ -6,12 +6,17 @@ const difficultyParameters = [
     {difficulty: 'hard', gridSize: 22, mines: 99},
 ];
 
+/*----- image assets -----*/
+//let imgMine = document.createElement('img');
+//imgMine.src = 'images/Minefield.png';
+
 /*----- app's state (variables) -----*/
 let gameOver = false;
 let difficultySelected;
 let boardState = [];
 let cellsRemaining;
 let flagsPlanted;
+let toggleMines;
 
 /*----- cached element references -----*/
 const diffEl = document.querySelectorAll('.difficulty');
@@ -38,6 +43,8 @@ function init() {
     flagsPlanted = 0;
     flagsEl.textContent = 'Flags used: ';
     totalMinesEl.textContent = 'Total mines: ';
+    toggleMines = false;
+    gameOver = false;
     boardState = [];
     if (difficultySelected) {
         for (let i = 0; i < difficultySelected.gridSize; i++) {
@@ -50,6 +57,7 @@ function init() {
     };
     messageEl.textContent = 'First, select a difficulty level';
     gameAreaEl.addEventListener('click', gridClick);
+    gameAreaEl.addEventListener('mouseup', plantFlag);
 }
 
 function setDifficulty(evt) {
@@ -130,7 +138,6 @@ function placeMines(difficultySelected) {
         }
     }
     calcPeripheralMines(difficultySelected);
-    renderMines(boardState.filter(element => element.hasMine === true));
 }
 
 function calcPeripheralMines(difficultySelected) {
@@ -225,14 +232,6 @@ function calcPeripheralMines(difficultySelected) {
     currCell.numPeripheralMines = numMines;
 }
 
-//might do a class toggle instead (element.classList.toggle(hasMine)), assign hasMine to the HTML element in placeMines function
-//, if hasMine is on then display the mine (set this on CSS page)
-function renderMines(hasMineArray){
-    hasMineArray.forEach(function(el) {
-        document.getElementById(el.id).textContent = 'X' //change this to a graphic of a mine later
-    })
-}
-
 function renderTotalMines(numMines) {
     totalMinesEl.textContent = `Total mines: ${numMines}`;
 }
@@ -246,39 +245,35 @@ function placeMarker(targetCell) {
     messageEl.textContent = "";
     let validMove = checkBoardState(targetCell.id)
     if (validMove) {
-        if (targetCell.classList.contains('flag')) {
+        if (boardState.find(element => element.id === targetCell.id).hasFlag) {
             messageEl.textContent = 'Clear the flag first';
             return;
         }
         checkMine(targetCell.id);
+        if (!gameOver) {
         targetCell.textContent = boardState.find(element => element.id === targetCell.id).numPeripheralMines;
         targetCell.style.fontSize = '25px';
         targetCell.style.textAlign = 'center';
         targetCell.classList.toggle('hover');
         updateBoardState(targetCell.id);
         checkWinCondition();
-    if (gameOver) {return};
+        }
     } else {
         messageEl.textContent = 'Pick another cell';
     }
  }
 
 function checkBoardState(cellId) {
-    const cellState = boardState.find(element => element.id === cellId);
-    return cellState.validMove
+    return boardState.find(element => element.id === cellId).validMove
 }
 
 function updateBoardState(cellId) {
-    const cellState = boardState.find(element => element.id === cellId);
-    cellState.validMove = false;
+    boardState.find(element => element.id === cellId).validMove = false;
 }
 
 function gridHoverOn(evt) {
-    if (evt.target.className === 'cell') {
-        const cellState = boardState.find(element => element.id === evt.target.id);
-        if (cellState.validMove) {
-            evt.target.classList.toggle('hover');
-        }
+    if (evt.target.className === 'cell' && boardState.find(element => element.id === evt.target.id).validMove) {
+        evt.target.classList.toggle('hover');
     }
 }
 
@@ -289,27 +284,29 @@ function gridHoverOff(evt) {
 }
 
 function checkMine(cellId) {
-    const cellState = boardState.find(element => element.id === cellId);
-    if (cellState.hasMine) {
-        //reveal image of mine
+    if (boardState.find(element => element.id === cellId).hasMine) {
+        toggleMines = true;
+        renderMines(boardState.filter(element => element.hasMine === true));
         messageEl.textContent = 'You hit a mine. Game over';
-        gameAreaEl.removeEventListener('click', gridClick)
-        for (let i = 0; i < difficultySelected.gridSize ** 2; i++) {
-            cellEl[i].removeEventListener('mouseover', gridHoverOn);
-            cellEl[i].removeEventListener('mouseout', gridHoverOff);
-        }
+        shutdownEvtListeners();
+        return gameOver = true;
     }
 }
 
 function checkWinCondition() {
     if (boardState.filter(element => element.validMove === false).length === cellsRemaining) {
         messageEl.textContent = 'You Win!';
-        gameAreaEl.removeEventListener('click', gridClick)
-        for (let i = 0; i < difficultySelected.gridSize ** 2; i++) {
-            cellEl[i].removeEventListener('mouseover', gridHoverOn);
-            cellEl[i].removeEventListener('mouseout', gridHoverOff);
-        }
+        shutdownEvtListeners();
     }
+}
+
+function shutdownEvtListeners() {
+    gameAreaEl.removeEventListener('click', gridClick);
+    for (let i = 0; i < difficultySelected.gridSize ** 2; i++) {
+        cellEl[i].removeEventListener('mouseover', gridHoverOn);
+        cellEl[i].removeEventListener('mouseout', gridHoverOff);
+    }
+    gameAreaEl.removeEventListener('mouseup', plantFlag);
 }
 
 function plantFlag(evt) {
@@ -317,24 +314,39 @@ function plantFlag(evt) {
         const cellState = boardState.find(element => element.id === evt.target.id);
         if (!cellState.hasFlag && cellState.validMove) {
             cellState.hasFlag = true;
-            evt.target.classList.toggle('flag');
             evt.target.textContent = 'F';
             flagsPlanted += 1;
             flagsEl.textContent = `Flags used: ${flagsPlanted}`;
             evt.target.classList.toggle('hover');
         } else if (cellState.hasFlag && cellState.validMove) {
             cellState.hasFlag = false;
-            evt.target.classList.toggle('flag');
             evt.target.textContent = '';
             flagsPlanted -= 1;
             flagsEl.textContent = `Flags used: ${flagsPlanted}`;
         }
-    };
+    }
 }
 
 function revealMines() {
-
+    toggleMines = !toggleMines;
+    renderMines(boardState.filter(element => element.hasMine === true));
 }
+
+function renderMines(hasMineArray){
+    if (toggleMines) {
+        hasMineArray.forEach(function(el) {
+        imgMine = document.createElement('img');
+        imgMine.src = 'images/Minefield.png';
+        document.getElementById(el.id).appendChild(imgMine);
+        imgMine.classList.add('imgMine');
+        })
+    } else if (!toggleMines) {
+        hasMineArray.forEach(function(el) {
+        document.getElementById(el.id).removeChild(document.querySelector('.imgMine'));
+        })
+    }
+}
+
 
 // Next steps:
 // x 1. Display Total no of bombs to be cleared
@@ -346,3 +358,9 @@ function revealMines() {
 
 // x 5.5. Added a function to check win condition -> has the player revealed ALL non-mine tiles? if so then game is won
 // x 6. right click to place flags -> toggle right-clickable status but only if cell is validMove = true
+
+// 7. Work on visual and sound effects -> graphics to replace the mine and flag (new OW2 ping and voiceline) placeholders, 
+// and play sound clips on certain events: mine hit, overtime music when one or two mines left, minefied deployed
+// x 7.1 Added functionality to the Dev Mode button to toggle the display of the mines ON/OFF
+// 7.2 Replace the numPeripheralMines text-based number with a colourful graphic of the number.
+// 8. Cascading logic -> sonic arrow animation?
