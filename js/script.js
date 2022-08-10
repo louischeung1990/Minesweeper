@@ -7,8 +7,11 @@ const difficultyParameters = [
 ];
 
 /*----- image assets -----*/
-//let imgMine = document.createElement('img');
-//imgMine.src = 'images/Minefield.png';
+//Mine => imgMine.src = 'images/Minefield.png';
+// https://overwatch.fandom.com/wiki/Wrecking_Ball
+
+// exclamation mark -> imgFlag.src = 'images/Flag.png;
+// https://favpng.com/png_view/symbol-exclamation-mark-symbol-interjection-png/GQYJBeF8
 
 /*----- app's state (variables) -----*/
 let gameOver = false;
@@ -27,6 +30,7 @@ const flagsEl = document.getElementById('flags')
 const gameAreaEl = document.getElementById('gameArea');
 const devModeEl = document.getElementById('dev-mode');
 let cellEl = document.querySelectorAll('.cell');
+let imgFlagsEl = document.querySelectorAll('.imgFlag')
 
 /*----- event listeners -----*/
 for (let i = 0; i < diffEl.length; i++) {diffEl[i].addEventListener('click', setDifficulty)};
@@ -35,6 +39,7 @@ devModeEl.addEventListener('click', revealMines);
 gameAreaEl.addEventListener('click', gridClick);
 document.addEventListener('contextmenu', event => event.preventDefault());
 gameAreaEl.addEventListener('mouseup', plantFlag);
+// imgFlagsEl.addEventListener('mouseup', removeFlag)
 
 /*----- functions -----*/
 init();
@@ -285,6 +290,7 @@ function gridHoverOff(evt) {
 
 function checkMine(cellId) {
     if (boardState.find(element => element.id === cellId).hasMine) {
+        //Remove all flags so flag and mine images don't crowd each other out
         toggleMines = true;
         renderMines(boardState.filter(element => element.hasMine === true));
         messageEl.textContent = 'You hit a mine. Game over';
@@ -314,16 +320,30 @@ function plantFlag(evt) {
         const cellState = boardState.find(element => element.id === evt.target.id);
         if (!cellState.hasFlag && cellState.validMove) {
             cellState.hasFlag = true;
-            evt.target.textContent = 'F';
+            let imgFlag = document.createElement('img');
+            imgFlag.src = 'images/Flag.png';
+            imgFlag.classList.add('imgFlag');
+            document.getElementById(cellState.id).appendChild(imgFlag);
+            
             flagsPlanted += 1;
             flagsEl.textContent = `Flags used: ${flagsPlanted}`;
             evt.target.classList.toggle('hover');
-        } else if (cellState.hasFlag && cellState.validMove) {
-            cellState.hasFlag = false;
-            evt.target.textContent = '';
-            flagsPlanted -= 1;
-            flagsEl.textContent = `Flags used: ${flagsPlanted}`;
+            imgFlagsEl = document.querySelectorAll('.imgFlag')
+            for (let i = 0; i < flagsPlanted; i++) {
+                imgFlagsEl[i].addEventListener('mouseup', removeFlag)
+            }
         }
+    }
+}
+
+function removeFlag(evt) {
+    boardState.find(element => element.id === evt.target.parentElement.id).hasFlag = false;
+    evt.target.parentElement.innerHTML = '';
+    flagsPlanted -= 1;
+    flagsEl.textContent = `Flags used: ${flagsPlanted}`;
+    imgFlagsEl = document.querySelectorAll('.imgFlag')
+    for (let i = 0; i < flagsPlanted; i++) {
+        imgFlagsEl[i].addEventListener('mouseup', removeFlag)
     }
 }
 
@@ -335,7 +355,7 @@ function revealMines() {
 function renderMines(hasMineArray){
     if (toggleMines) {
         hasMineArray.forEach(function(el) {
-        imgMine = document.createElement('img');
+        let imgMine = document.createElement('img');
         imgMine.src = 'images/Minefield.png';
         document.getElementById(el.id).appendChild(imgMine);
         imgMine.classList.add('imgMine');
