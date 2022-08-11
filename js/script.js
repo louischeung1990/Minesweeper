@@ -63,6 +63,7 @@ let audioPointer = 0;
 let playList;
 let audioIsPlaying;
 let firstTimeTheme = true;
+let firstMove;
 
 /*----- cached element references -----*/
 const diffEl = document.querySelectorAll('.difficulty');
@@ -70,6 +71,7 @@ const resetEl = document.getElementById('reset');
 const messageEl = document.getElementById('message');
 const totalMinesEl = document.getElementById('mines');
 const flagsEl = document.getElementById('flags')
+const timerEl = document.getElementById('timer');
 const gameAreaEl = document.getElementById('gameArea');
 const devModeEl = document.getElementById('dev-mode');
 let cellEl = document.querySelectorAll('.cell');
@@ -89,9 +91,11 @@ aboutEl.addEventListener('click', toggleLore);
 init();
 
 function init() {
+    firstMove = true;
     flagsPlanted = 0;
     flagsEl.textContent = 'Flags used: ';
     totalMinesEl.textContent = 'Total mines: ';
+    timerEl.textContent = 'Timer';
     toggleMines = false;
     gameOver = false;
     boardState = [];
@@ -107,24 +111,14 @@ function init() {
     messageEl.textContent = 'First, select a difficulty level';
     gameAreaEl.addEventListener('click', gridClick);
     gameAreaEl.addEventListener('mouseup', plantFlag);
-    if (audioIsPlaying) {
-        for (i = 0; i < playList.length; i++) {
-        playList[i].pause();
-        playList[i].currentTime = 0;
-        }
-    }
+    interruptAudio();
     playList = [];
     audioIsPlaying = false;
     audioPointer = 0;
 }
 
 function setDifficulty(evt) {
-    if (audioIsPlaying) {
-        for (i = 0; i < playList.length; i++) {
-        playList[i].pause();
-        playList[i].currentTime = 0;
-        }
-    }
+    interruptAudio();
     difficultySelected = difficultyParameters.find(element => element.difficulty === evt.target.id);
     messageEl.textContent = `You have selected ${evt.target.id} difficulty`;
     //now disable the event listener for difficulty selection until this current game is finished
@@ -302,67 +296,88 @@ function renderTotalMines(numMines) {
 }
 
 function gridClick(evt) {
-    if (evt.target.classList.contains('cell')) {placeMarker(evt.target)};
+    if (evt.target.classList.contains('imgNumber')) {
+        messageEl.textContent = 'Pick another cell';
+    } else if (evt.target.classList.contains('cell')) {
+        if (firstMove) {
+            startTimer();
+            firstMove = !firstMove;
+        }
+        placeMarker(evt.target);
+    }
     return;
+}
+
+function startTimer() {
+    let time = 0;
+    timer = setInterval(function() {
+        time += 1;
+        timerEl.textContent = `Timer ${time}`;
+    }, 1000);
+}
+
+function stopTimer() {
+    clearInterval(timer);
 }
 
 function placeMarker(targetCell) {
     messageEl.textContent = "";
-    let validMove = checkBoardState(targetCell.id)
+    let validMove = checkBoardState(targetCell.id);
     if (validMove) {
         checkMine(targetCell.id);
         if (!gameOver) {
             cellsRemaining -= 1;
             let imgNumber = document.createElement('img');
-            
-            
             switch(boardState.find(element => element.id === targetCell.id).numPeripheralMines) {
                 case 0:
                     document.getElementById(targetCell.id).style.backgroundColor = '#e6ccb3';
                     break;
                 case 1:
                     imgNumber.src = 'images/1.png';
+                    imgNumber.classList.add('imgNumber');
                     document.getElementById(targetCell.id).appendChild(imgNumber);
                     break;
                 case 2:
                     imgNumber.src = 'images/2.png';
+                    imgNumber.classList.add('imgNumber');
                     document.getElementById(targetCell.id).appendChild(imgNumber);
                     break;
                 case 3:
                     imgNumber.src = 'images/3.png';
+                    imgNumber.classList.add('imgNumber');
                     document.getElementById(targetCell.id).appendChild(imgNumber);
                     break;
                 case 4:
                     imgNumber.src = 'images/4.png';
+                    imgNumber.classList.add('imgNumber');
                     document.getElementById(targetCell.id).appendChild(imgNumber);
                     break;
                 case 5:
                     imgNumber.src = 'images/5.png';
+                    imgNumber.classList.add('imgNumber');
                     document.getElementById(targetCell.id).appendChild(imgNumber);
                     break;
                 case 6:
                     imgNumber.src = 'images/6.png';
+                    imgNumber.classList.add('imgNumber');
                     document.getElementById(targetCell.id).appendChild(imgNumber);
                     break;
                 case 7:
                     imgNumber.src = 'images/7.png';
+                    imgNumber.classList.add('imgNumber');
                     document.getElementById(targetCell.id).appendChild(imgNumber);
                     break;
                 case 8:
                     imgNumber.src = 'images/8.png';
+                    imgNumber.classList.add('imgNumber');
                     document.getElementById(targetCell.id).appendChild(imgNumber);
                     break;
-
             }
-
-            // targetCell.textContent = boardState.find(element => element.id === targetCell.id).numPeripheralMines;
-            // targetCell.style.fontSize = '25px';
-            // targetCell.style.textAlign = 'center';
             targetCell.classList.toggle('hover');
             updateBoardState(targetCell.id);
             checkWinCondition();
         }
-    } else {
+    } else if (!validMove) {
         messageEl.textContent = 'Pick another cell';
     }
  }
@@ -392,6 +407,8 @@ function checkMine(cellId) {
         toggleMines = true;
         renderMines(boardState.filter(element => element.hasMine === true));
         messageEl.textContent = 'You hit a mine. Game over';
+        stopTimer();
+        interruptAudio();
         playList = [soundMineHit, soundMineHitArr[Math.floor(Math.random()*soundMineHitArr.length)]]
         audioPointer = 0;
         playSoundArray();
@@ -408,12 +425,8 @@ function checkWinCondition() {
     }
     if (cellsRemaining === 0) {
         messageEl.textContent = 'You Win!';
-        if (audioIsPlaying) {
-            for (i = 0; i < playList.length; i++) {
-            playList[i].pause();
-            playList[i].currentTime = 0;
-            }
-        }
+        stopTimer();
+        interruptAudio();
         playList = [soundVictory, soundVictoryTheme];
         audioPointer = 0;
         playSoundArray();
@@ -513,7 +526,16 @@ function playSoundArray() {
         audioPointer++;
     }
 }
-    
+
+function interruptAudio() {
+    if (audioIsPlaying) {
+        for (i = 0; i < playList.length; i++) {
+        playList[i].pause();
+        playList[i].currentTime = 0;
+        }
+    }
+}
+
 function toggleLore() {
     if (firstTimeTheme) {
         firstTimeTheme = !firstTimeTheme;
