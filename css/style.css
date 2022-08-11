@@ -1,7 +1,17 @@
+/* image assets */
+/* Top Banner
+https://cutewallpaper.org/download.php?file=/21/overwatch-wallpaper-dual-monitor/monitor-4K-wallpapers-for-your-desktop-or-mobile-screen-free-.jpg
+
+Main game area background
+https://wallpaper-mania.com/post/wallpaper-id-777000193482/
+
+Right Banner
+https://www.pinterest.ca/pin/407083253827027464/ */
+
 body {
     display: grid;
     grid-template-columns: 160px 700px 320px;
-    grid-template-rows: 105px 700px 65px;
+    grid-template-rows: 110px 700px 40px;
     grid-template-areas:
     "header header header"
     "left main right"
@@ -12,24 +22,46 @@ body {
 
 #top {
     grid-area: header;
+    position: relative;
+    
+}
+
+#top::before {
+    content:'';
+    background-image: url('../images/Background_Top.jpg');
+    background-size: cover;
+    position: absolute;
+    opacity: 0.3;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
 }
 
 #top > h1 {
+    position: relative;
+    margin-top: 0;
+    margin-bottom: 0;
     margin-left: 28%;
+    font-family: 'Teko', sans-serif;
+    font-size: 60px;
 }
 
 #message {
-    height: 25px;
+    position: relative;
+    height: 30px;
     margin-left: 15%;
+    font-family: 'Aldrich', sans-serif;
+    font-size: 20px;
 }
 
 #middle {
     grid-area: main;
+    display: flex;
+    background-image: url('../images/Background_Main.png');
+    opacity: 0.95;
+    background-size: 100% 100%;
 }
-
-/* #gameArea {
-
-} */
 
 .cell {
     box-sizing: border-box;
@@ -43,7 +75,6 @@ body {
 .row {
     display: block;
     height: 30px;
-    
 }
 
 .hover {
@@ -66,12 +97,84 @@ body {
 
 #left {
     grid-area: left;
+    display: flex;
+    flex-direction: column;
+    background-color: #bfbfbf;
+}
+
+#left > #diff-selection {
+    margin-bottom: 80px;
+    margin-top: auto;
+}
+
+#timer, #mines, #flags, #left > #diff-selection > p {
+    font-family: 'Silkscreen', cursive;
+    font-size: 18px;
+}
+
+#timer, #mines, #flags {
+    margin: 10px;
+}
+
+#mines, #flags {
+    text-align: center;
+}
+
+#left > #diff-selection > p {
+    text-align: center;
+}
+
+#left > #diff-selection > button {
+    display: block;
+    margin: auto;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    font-family: 'Silkscreen', cursive;
+    border-radius: 5px;
+    font-size: 15px;
+}
+
+#easy {
+    background-color: #00e64d;
+}
+
+#medium {
+    background-color: #ffa64d;
+}
+
+#hard { 
+    background-color: #ff3333;
 }
 
 #right {
     grid-area: right;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-image: url('../images/Right_Banner.jpg');
+    background-size: 320px ;
+    background-repeat: no-repeat;
+    background-position: bottom;
+}
+
+#about {
+    font-family: 'Silkscreen', cursive;
+    width: auto;
+    border-radius: 5px;
+    font-size: 20px;
 }
 
 #bottom {
     grid-area: footer;
+    display: flex;
+    align-items: center;
+    background-color: #bfbfbf;
+}
+
+#bottom > button {
+    font-family: 'Silkscreen', cursive;
+    border-radius: 5px;
+    font-size: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
 }

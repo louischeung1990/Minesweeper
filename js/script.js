@@ -7,10 +7,14 @@ const difficultyParameters = [
 ];
 
 /*----- image assets -----*/
+//Minesweeper numbers
+// commons.wikimedia.org
+
 //Mine => imgMine.src = 'images/Minefield.png';
+//Hammond -> imgHammond.src = 'images/Hammond.png';
 // https://overwatch.fandom.com/wiki/Wrecking_Ball
 
-// exclamation mark -> imgFlag.src = 'images/Flag.png;
+// exclamation mark -> imgFlag.src = 'images/Flag.png';
 // https://favpng.com/png_view/symbol-exclamation-mark-symbol-interjection-png/GQYJBeF8
 
 /*----- sound assets -----*/
@@ -50,6 +54,7 @@ const soundMineHitArr = [soundMineHit1, soundMineHit2, soundMineHit3, soundMineH
 const soundOvertime = new Audio('sound/Overtime.mp3');
 const soundVictory = new Audio('sound/Victory.mp3');
 const soundVictoryTheme = new Audio('sound/Victory_Theme.mp3');
+const soundImpatient = new Audio('sound/Impatient.mp3');
 //    sonic arrow voicelines
 
 /*----- app's state (variables) -----*/
@@ -135,15 +140,18 @@ function renderGrid(difficultySelected) {
     let cntI = 0;
     let cntJ = 0;
     let posLeft;
+    let posTop;
     for (let i = 0; i < difficultySelected.gridSize; i++) {
         let row = document.createElement('div');
         row.className = 'row';
         for (let j = 0; j < difficultySelected.gridSize; j++) {
             let block = document.createElement('div');
+            block.style.border = '1px solid #663300';
+            block.style.borderRadius = '2px';
             block.classList.add('cell');
             block.id = `${cntI}_${cntJ}`;
             row.append(block);
-            posLeft = j*cellWidth + 10;
+            posLeft = j*cellWidth;
             block.style.left = posLeft +'px';
             posTop = -j*cellWidth;
             block.style.top = posTop + 'px';
@@ -154,6 +162,8 @@ function renderGrid(difficultySelected) {
         cntJ = 0;
         posLeft = 0;
     }
+    gameAreaEl.style.width = `${difficultySelected.gridSize*cellWidth}px`;
+    gameAreaEl.style.margin = 'auto';
     cellEl  = document.querySelectorAll('.cell');
     for (let i = 0; i < difficultySelected.gridSize ** 2; i++) {
         cellEl[i].addEventListener('mouseover', gridHoverOn);
@@ -294,7 +304,8 @@ function calcPeripheralMines(difficultySelected) {
 }
 
 function renderTotalMines(numMines) {
-    totalMinesEl.textContent = `Total mines: ${numMines}`;
+    totalMinesEl.textContent = `Total mines: \r\n`;
+    totalMinesEl.textContent += `${numMines}`;
 }
 
 function gridClick(evt) {
@@ -315,6 +326,11 @@ function startTimer() {
     timer = setInterval(function() {
         time += 1;
         timerEl.textContent = `Timer ${time}`;
+        if (time === 60) {
+            playList = [soundImpatient];
+            audioPointer = 0;
+            playSoundArray();
+        }
     }, 1000);
 }
 
@@ -420,7 +436,7 @@ function checkMine(cellId) {
 }
 
 function checkWinCondition() {
-    if (cellsRemaining < 4) {
+    if (cellsRemaining < 5) {
         playList = [soundOvertime];
         audioPointer = 0;
         playSoundArray();
@@ -455,7 +471,7 @@ function plantFlag(evt) {
             imgFlag.classList.add('imgFlag');
             document.getElementById(cellState.id).appendChild(imgFlag);
             flagsPlanted += 1;
-            flagsEl.textContent = `Flags used: ${flagsPlanted}`;
+            flagsEl.textContent = `Flags used: \r\n ${flagsPlanted}`;
             evt.target.classList.toggle('hover');
             imgFlagsEl = document.querySelectorAll('.imgFlag');
             for (let i = 0; i < flagsPlanted; i++) {
@@ -473,7 +489,7 @@ function removeFlag(evt) {
         boardState.find(element => element.id === evt.target.parentElement.id).hasFlag = false;
         evt.target.parentElement.innerHTML = '';
         flagsPlanted -= 1;
-        flagsEl.textContent = `Flags used: ${flagsPlanted}`;
+        flagsEl.textContent = `Flags used: \r\n ${flagsPlanted}`;
         imgFlagsEl = document.querySelectorAll('.imgFlag');
         for (let i = 0; i < flagsPlanted; i++) {
             imgFlagsEl[i].addEventListener('mouseup', removeFlag);
@@ -545,13 +561,36 @@ function toggleLore() {
         audioPointer = 0;
         playSoundArray();
     }
-
-    // loreEl.classList.toggle('show');
-    // if (loreEl.classList.contains('show')) {
-
-    // } else if (!loreEl.classList.contains('show')) {
-    //     //hide the lore
-    // }
+    aboutEl.classList.toggle('show');
+    if (aboutEl.classList.contains('show')) {
+        let loreBox = document.createElement('div');
+        loreBox.classList.add('lore');
+        document.getElementById('right').appendChild(loreBox);
+        const loreEl = document.querySelector('.lore')
+        loreEl.style.width = '280px';
+        loreEl.style.margin = 'auto';
+        loreEl.style.border = '2px solid black';
+        loreEl.style.borderRadius = '5px';
+        loreEl.style.backgroundColor = 'white';
+        loreEl.style.opacity = '0.85';
+        loreEl.style.padding = '12px';
+        loreEl.style.marginTop = '10px';
+        loreEl.style.fontFamily = 'Aldrich, sans-serif';
+        loreEl.style.fontSize = '23px';
+        loreEl.style.textAlign = 'center';
+        loreEl.textContent = `As we bid adieu to Overwatch 1 and look forward to the sequel, the Blizzard devs \r\n`;
+        loreEl.textContent += `have been thinking about ways to make Hammond more viable. In their infinite wisdom, \r\n`;
+        loreEl.textContent += `they've made his minefield ultimate invisible and the distribution pattern unpredictable. \r\n`;
+        loreEl.textContent += `Can you find all the mines? Thanks for playing!`
+        let imgHammond = document.createElement('img');
+        imgHammond.src = 'images/Wrecking_Ball.png';
+        imgHammond.style.width = '280px';
+        imgHammond.style.height = '230px';
+        loreEl.append(imgHammond);
+        // document.getElementById(el.id).append(imgMine);
+    } else if (!aboutEl.classList.contains('show')) {
+        document.getElementById('right').removeChild(document.querySelector('.lore'));
+    }
 }
 
 
@@ -568,9 +607,9 @@ function toggleLore() {
 // x 5.5. Added a function to check win condition -> has the player revealed ALL non-mine tiles? if so then game is won
 // x 6. right click to place flags -> toggle right-clickable status but only if cell is validMove = true
 
-// 7. Work on visual and sound effects -> graphics to replace the mine and flag (new OW2 ping and voiceline) placeholders, 
+// x 7. Work on visual and sound effects -> graphics to replace the mine and flag (new OW2 ping and voiceline) placeholders, 
 // and play sound clips on certain events: mine hit, overtime music when one or two mines left, minefied deployed
-// 7.0.1 Layout: revise wireframe and search for appropriately sized images to use as background
+// x 7.0.1 Layout: revise wireframe and search for appropriately sized images to use as background
         // List of sound clips needed: ping voice lines (up to 3, make it so it doesn't always play)
         //                             minefield deployed (should be 2. "minefield deployed" and "area denied")
         //                             mine hit (Hammond voice lines, find a few and play one at random when gameOver)
@@ -581,5 +620,5 @@ function toggleLore() {
         //                             Victory music and voiceline (Narrator)
         //                             Defeat voiceline (Narrator)
 // x 7.1 Added functionality to the Dev Mode button to toggle the display of the mines ON/OFF
-// 7.2 Replace the numPeripheralMines text-based number with a colourful graphic of the number.
+// x 7.2 Replace the numPeripheralMines text-based number with a colourful graphic of the number.
 // 8. Cascading logic -> sonic arrow animation?

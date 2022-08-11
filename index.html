@@ -5,11 +5,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minesweeper - Louis Cheung</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet"> -->
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Aldrich&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/style.css">
     <script defer src="./js/script.js"></script>
 </head>
 <body>
     <div id="top">
+        <!-- <div id="top-banner"></div> -->
         <h1>Welcome to Minesweeper</h1>
         <div id="message"></div>
     </div>
@@ -20,14 +26,16 @@
         <div id="timer"></div>
         <div id="mines"></div>
         <div id="flags"></div>
-        <p>Difficulty Selection</p>
-        <button class="difficulty" id="easy">Easy</button>
-        <button class="difficulty" id="medium">Medium</button>
-        <button class="difficulty" id="hard">Hard</button>
+        <div id="diff-selection">
+            <p>Difficulty Selection</p>
+            <button class="difficulty" id="easy">Easy</button>
+            <button class="difficulty" id="medium">Medium</button>
+            <button class="difficulty" id="hard">Hard</button>
+        </div>
     </div>
     <div id="right">
+        
         <button id="about">Lore</button>
-        <div id="lore"></div>
     </div>
     <div id="bottom">
         <button id="reset">Reset</button>
