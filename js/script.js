@@ -145,6 +145,8 @@ function renderGrid(difficultySelected) {
             row.append(block);
             posLeft = j*cellWidth + 10;
             block.style.left = posLeft +'px';
+            posTop = -j*cellWidth;
+            block.style.top = posTop + 'px';
             cntJ++;
         }
         document.getElementById('gameArea').append(row);
