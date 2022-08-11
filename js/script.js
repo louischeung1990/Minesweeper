@@ -50,9 +50,7 @@ const soundMineHitArr = [soundMineHit1, soundMineHit2, soundMineHit3, soundMineH
 const soundOvertime = new Audio('sound/Overtime.mp3');
 const soundVictory = new Audio('sound/Victory.mp3');
 const soundVictoryTheme = new Audio('sound/Victory_Theme.mp3');
-
-                                    //    sonic arrow voicelines
-        //                             OW intro music
+//    sonic arrow voicelines
 
 /*----- app's state (variables) -----*/
 let gameOver = false;
@@ -76,7 +74,7 @@ const gameAreaEl = document.getElementById('gameArea');
 const devModeEl = document.getElementById('dev-mode');
 let cellEl = document.querySelectorAll('.cell');
 let imgFlagsEl = document.querySelectorAll('.imgFlag');
-const loreEl = document.getElementById('lore');
+const aboutEl = document.getElementById('about');
 
 /*----- event listeners -----*/
 for (let i = 0; i < diffEl.length; i++) {diffEl[i].addEventListener('click', setDifficulty)};
@@ -85,22 +83,9 @@ devModeEl.addEventListener('click', revealMines);
 gameAreaEl.addEventListener('click', gridClick);
 document.addEventListener('contextmenu', event => event.preventDefault());
 gameAreaEl.addEventListener('mouseup', plantFlag);
-loreEl.addEventListener('click', toggleLore);
+aboutEl.addEventListener('click', toggleLore);
 
 /*----- functions -----*/
-//Main theme will not play unless user interacts with document first
-// window.addEventListener('mousemove', playMainTheme)
-
-
-
-// function playMainTheme() {
-//     if (firstTimeTheme) {
-//         firstTimeTheme = !firstTimeTheme;
-//         playList = [soundMainTheme];
-//         audioPointer = 0;
-//         playSoundArray();
-//     }
-// }
 init();
 
 function init() {
@@ -134,6 +119,12 @@ function init() {
 }
 
 function setDifficulty(evt) {
+    if (audioIsPlaying) {
+        for (i = 0; i < playList.length; i++) {
+        playList[i].pause();
+        playList[i].currentTime = 0;
+        }
+    }
     difficultySelected = difficultyParameters.find(element => element.difficulty === evt.target.id);
     messageEl.textContent = `You have selected ${evt.target.id} difficulty`;
     //now disable the event listener for difficulty selection until this current game is finished
@@ -319,16 +310,54 @@ function placeMarker(targetCell) {
     messageEl.textContent = "";
     let validMove = checkBoardState(targetCell.id)
     if (validMove) {
-        if (boardState.find(element => element.id === targetCell.id).hasFlag) {
-            messageEl.textContent = 'Clear the flag first';
-            return;
-        }
         checkMine(targetCell.id);
         if (!gameOver) {
             cellsRemaining -= 1;
-            targetCell.textContent = boardState.find(element => element.id === targetCell.id).numPeripheralMines;
-            targetCell.style.fontSize = '25px';
-            targetCell.style.textAlign = 'center';
+            let imgNumber = document.createElement('img');
+            
+            
+            switch(boardState.find(element => element.id === targetCell.id).numPeripheralMines) {
+                case 0:
+                    document.getElementById(targetCell.id).style.backgroundColor = '#e6ccb3';
+                    break;
+                case 1:
+                    imgNumber.src = 'images/1.png';
+                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    break;
+                case 2:
+                    imgNumber.src = 'images/2.png';
+                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    break;
+                case 3:
+                    imgNumber.src = 'images/3.png';
+                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    break;
+                case 4:
+                    imgNumber.src = 'images/4.png';
+                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    break;
+                case 5:
+                    imgNumber.src = 'images/5.png';
+                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    break;
+                case 6:
+                    imgNumber.src = 'images/6.png';
+                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    break;
+                case 7:
+                    imgNumber.src = 'images/7.png';
+                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    break;
+                case 8:
+                    imgNumber.src = 'images/8.png';
+                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    break;
+
+            }
+
+            // targetCell.textContent = boardState.find(element => element.id === targetCell.id).numPeripheralMines;
+            // targetCell.style.fontSize = '25px';
+            // targetCell.style.textAlign = 'center';
             targetCell.classList.toggle('hover');
             updateBoardState(targetCell.id);
             checkWinCondition();
@@ -377,8 +406,7 @@ function checkWinCondition() {
         audioPointer = 0;
         playSoundArray();
     }
-    // if (boardState.filter(element => element.validMove === false).length === cellsRemaining) {
-        if (cellsRemaining === 0) {
+    if (cellsRemaining === 0) {
         messageEl.textContent = 'You Win!';
         if (audioIsPlaying) {
             for (i = 0; i < playList.length; i++) {
@@ -426,13 +454,15 @@ function plantFlag(evt) {
 }
 
 function removeFlag(evt) {
-    boardState.find(element => element.id === evt.target.parentElement.id).hasFlag = false;
-    evt.target.parentElement.innerHTML = '';
-    flagsPlanted -= 1;
-    flagsEl.textContent = `Flags used: ${flagsPlanted}`;
-    imgFlagsEl = document.querySelectorAll('.imgFlag')
-    for (let i = 0; i < flagsPlanted; i++) {
-        imgFlagsEl[i].addEventListener('mouseup', removeFlag);
+    if (evt.button ===2) {
+        boardState.find(element => element.id === evt.target.parentElement.id).hasFlag = false;
+        evt.target.parentElement.innerHTML = '';
+        flagsPlanted -= 1;
+        flagsEl.textContent = `Flags used: ${flagsPlanted}`;
+        imgFlagsEl = document.querySelectorAll('.imgFlag');
+        for (let i = 0; i < flagsPlanted; i++) {
+            imgFlagsEl[i].addEventListener('mouseup', removeFlag);
+        }
     }
 }
 
@@ -441,18 +471,30 @@ function revealMines() {
     renderMines(boardState.filter(element => element.hasMine === true));
 }
 
- //Toggle all flag images so flag and mine images don't crowd each other out
 function renderMines(hasMineArray){
     if (toggleMines) {
         hasMineArray.forEach(function(el) {
-        let imgMine = document.createElement('img');
-        imgMine.src = 'images/Minefield.png';
-        document.getElementById(el.id).appendChild(imgMine);
-        imgMine.classList.add('imgMine');
+            if (el.hasFlag) {
+                document.getElementById(el.id).removeChild(document.querySelector('.imgFlag'));
+            }
+            let imgMine = document.createElement('img');
+            imgMine.src = 'images/Minefield.png';
+            document.getElementById(el.id).appendChild(imgMine);
+            imgMine.classList.add('imgMine');
         })
     } else if (!toggleMines) {
         hasMineArray.forEach(function(el) {
-        document.getElementById(el.id).removeChild(document.querySelector('.imgMine'));
+            document.getElementById(el.id).removeChild(document.querySelector('.imgMine'));
+            if (el.hasFlag) {
+                let imgFlag = document.createElement('img');
+                imgFlag.src = 'images/Flag.png';
+                document.getElementById(el.id).appendChild(imgFlag);
+                imgFlag.classList.add('imgFlag');
+                imgFlagsEl = document.querySelectorAll('.imgFlag');
+                for (let i = 0; i < flagsPlanted; i++) {
+                    imgFlagsEl[i].addEventListener('mouseup', removeFlag);
+                }
+            }
         })
     }
 }
@@ -472,18 +514,24 @@ function playSoundArray() {
     }
 }
     
-// window.addEventListener('mousemove', playMainTheme)
+function toggleLore() {
+    if (firstTimeTheme) {
+        firstTimeTheme = !firstTimeTheme;
+        playList = [soundMainTheme];
+        audioPointer = 0;
+        playSoundArray();
+    }
+
+    // loreEl.classList.toggle('show');
+    // if (loreEl.classList.contains('show')) {
+
+    // } else if (!loreEl.classList.contains('show')) {
+    //     //hide the lore
+    // }
+}
 
 
 
-// function playMainTheme() {
-//     if (firstTimeTheme) {
-//         firstTimeTheme = !firstTimeTheme;
-//         playList = [soundMainTheme];
-//         audioPointer = 0;
-//         playSoundArray();
-//     }
-// }
 
 // Next steps:
 // x 1. Display Total no of bombs to be cleared
