@@ -7,15 +7,15 @@ This project is a recreation of the classic game of Minesweeper, with a twist on
 
 ## Screenshots
 
-![Game screen on load] (/images/Screenshot_1.png)
+![Game screen on load] (https://i.imgur.com/b77LxUz.png)
 
 Upon loading the game, the user will see the main screen. The user may choose to read the lore on the right-side of the screen, or pick a difficulty at the bottom left to begin playing.
 
-![Game screen on load] (/images/Screenshot_2.png)
+![Game screen on load] (https://i.imgur.com/XuKymRh.png)
 
 Users may pick any difficulty they would like; higher difficulties feature larger grids and more mines. At any point, the user can press the Reset button at the bottom to start again.
 
-![Game screen on load] (/images/Screenshot_3.png)
+![Game screen on load] (https://i.imgur.com/uIobuux.png)
 
 When the game is over, whether the user wins or loses, the locations of the mines on the grid will be revealed.
 
