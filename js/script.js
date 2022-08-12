@@ -38,7 +38,7 @@ const soundPing7 = new Audio('sound/Ping_Sombra.mp3');
 const soundPing8 = new Audio('sound/Ping_Torb.mp3');
 const soundPing9 = new Audio('sound/Ping_Tracer.mp3');
 const soundPing = [soundPing1, soundPing2, soundPing3, soundPing4, soundPing5, soundPing6, soundPing7,
-                   soundPing8, soundPing9]
+                   soundPing8, soundPing9];
 const soundMineHit = new Audio('sound/Mine_Hit.mp3');
 const soundMineHit1 = new Audio('sound/Ally_Lost.mp3');
 const soundMineHit2 = new Audio('sound/Destroyed.mp3');
@@ -50,12 +50,12 @@ const soundMineHit7 = new Audio('sound/Shut_Down.mp3');
 const soundMineHit8 = new Audio('sound/Target_Terminated.mp3');
 const soundMineHit9 = new Audio('sound/The_Hamster_Sends_His_Regards.mp3');
 const soundMineHitArr = [soundMineHit1, soundMineHit2, soundMineHit3, soundMineHit4, soundMineHit5, soundMineHit6,
-                         soundMineHit7, soundMineHit8, soundMineHit9]
+                         soundMineHit7, soundMineHit8, soundMineHit9];
 const soundOvertime = new Audio('sound/Overtime.mp3');
 const soundVictory = new Audio('sound/Victory.mp3');
 const soundVictoryTheme = new Audio('sound/Victory_Theme.mp3');
 const soundImpatient = new Audio('sound/Impatient.mp3');
-//    sonic arrow voicelines
+const soundSonicArrow = new Audio('sound/Sonic_Arrow.mp3');
 
 /*----- app's state (variables) -----*/
 let gameOver = false;
@@ -69,6 +69,7 @@ let playList;
 let audioIsPlaying;
 let firstTimeTheme = true;
 let firstMove;
+let revealCombo;
 
 /*----- cached element references -----*/
 const diffEl = document.querySelectorAll('.difficulty');
@@ -178,7 +179,7 @@ function initBoardState(boardSize) {
     for (let i = 0; i < boardSize ** 2; i++) {
         boardState.push({});
         boardState[i].id = '';
-        boardState[i].hasMine = false; //add more grid properties here as development progresses
+        boardState[i].hasMine = false;
         boardState[i].validMove = true;
         boardState[i].numPeripheralMines = 0;
         boardState[i].hasFlag = false;
@@ -316,7 +317,8 @@ function gridClick(evt) {
             startTimer();
             firstMove = !firstMove;
         }
-        placeMarker(evt.target);
+        revealCombo = 0;
+        placeMarker(evt.target.id);
     }
     return;
 }
@@ -338,61 +340,81 @@ function stopTimer() {
     clearInterval(timer);
 }
 
-function placeMarker(targetCell) {
+function placeMarker(targetCellId) {
     messageEl.textContent = "";
-    let validMove = checkBoardState(targetCell.id);
+    let splitId = targetCellId.split('_');
+    splitId = splitId.map(str => {return Number(str)});
+    if (splitId[0] < 0 || splitId[0] >= difficultySelected.gridSize || splitId[1] < 0 || splitId[1] >= difficultySelected.gridSize) {
+        return;
+    }
+    let validMove = checkBoardState(targetCellId);
     if (validMove) {
-        checkMine(targetCell.id);
+        updateBoardState(targetCellId);
+        checkMine(targetCellId);
         if (!gameOver) {
             cellsRemaining -= 1;
             let imgNumber = document.createElement('img');
-            switch(boardState.find(element => element.id === targetCell.id).numPeripheralMines) {
+            switch(boardState.find(element => element.id === targetCellId).numPeripheralMines) {
                 case 0:
-                    document.getElementById(targetCell.id).style.backgroundColor = '#e6ccb3';
+                    document.getElementById(targetCellId).style.backgroundColor = '#e6ccb3';
+                    placeMarker(`${splitId[0]-1}_${splitId[1]-1}`)
+                    placeMarker(`${splitId[0]-1}_${splitId[1]}`)
+                    placeMarker(`${splitId[0]-1}_${splitId[1]+1}`)
+                    placeMarker(`${splitId[0]}_${splitId[1]-1}`)
+                    placeMarker(`${splitId[0]}_${splitId[1]+1}`)
+                    placeMarker(`${splitId[0]+1}_${splitId[1]-1}`) 
+                    placeMarker(`${splitId[0]+1}_${splitId[1]}`)
+                    placeMarker(`${splitId[0]+1}_${splitId[1]+1}`)
                     break;
                 case 1:
                     imgNumber.src = 'images/1.png';
                     imgNumber.classList.add('imgNumber');
-                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    document.getElementById(targetCellId).appendChild(imgNumber);
                     break;
                 case 2:
                     imgNumber.src = 'images/2.png';
                     imgNumber.classList.add('imgNumber');
-                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    document.getElementById(targetCellId).appendChild(imgNumber);
                     break;
                 case 3:
                     imgNumber.src = 'images/3.png';
                     imgNumber.classList.add('imgNumber');
-                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    document.getElementById(targetCellId).appendChild(imgNumber);
                     break;
                 case 4:
                     imgNumber.src = 'images/4.png';
                     imgNumber.classList.add('imgNumber');
-                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    document.getElementById(targetCellId).appendChild(imgNumber);
                     break;
                 case 5:
                     imgNumber.src = 'images/5.png';
                     imgNumber.classList.add('imgNumber');
-                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    document.getElementById(targetCellId).appendChild(imgNumber);
                     break;
                 case 6:
                     imgNumber.src = 'images/6.png';
                     imgNumber.classList.add('imgNumber');
-                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    document.getElementById(targetCellId).appendChild(imgNumber);
                     break;
                 case 7:
                     imgNumber.src = 'images/7.png';
                     imgNumber.classList.add('imgNumber');
-                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    document.getElementById(targetCellId).appendChild(imgNumber);
                     break;
                 case 8:
                     imgNumber.src = 'images/8.png';
                     imgNumber.classList.add('imgNumber');
-                    document.getElementById(targetCell.id).appendChild(imgNumber);
+                    document.getElementById(targetCellId).appendChild(imgNumber);
                     break;
             }
-            targetCell.classList.toggle('hover');
-            updateBoardState(targetCell.id);
+            document.getElementById(targetCellId).classList.toggle('hover');
+            revealCombo += 1;
+            if (revealCombo === 10) {
+                playList = [soundSonicArrow];
+                audioPointer = 0;
+                playSoundArray();
+            }
+            
             checkWinCondition();
         }
     } else if (!validMove) {
@@ -422,8 +444,6 @@ function gridHoverOff(evt) {
 
 function checkMine(cellId) {
     if (boardState.find(element => element.id === cellId).hasMine) {
-        toggleMines = true;
-        renderMines(boardState.filter(element => element.hasMine === true));
         messageEl.textContent = 'You hit a mine. Game over';
         stopTimer();
         interruptAudio();
@@ -431,7 +451,8 @@ function checkMine(cellId) {
         audioPointer = 0;
         playSoundArray();
         shutdownEvtListeners();
-        return gameOver = true;
+        gameOver = true;
+        renderMinesFinal(boardState.filter(element => element.hasMine === true));
     }
 }
 
@@ -449,6 +470,7 @@ function checkWinCondition() {
         audioPointer = 0;
         playSoundArray();
         shutdownEvtListeners();
+        renderMinesFinal(boardState.filter(element => element.hasMine === true));
     }
 }
 
@@ -506,7 +528,8 @@ function renderMines(hasMineArray){
     if (toggleMines) {
         hasMineArray.forEach(function(el) {
             if (el.hasFlag) {
-                document.getElementById(el.id).removeChild(document.querySelector('.imgFlag'));
+                document.getElementById(el.id).innerHTML = '';
+                imgFlagsEl = document.querySelectorAll('.imgFlag');
             }
             let imgMine = document.createElement('img');
             imgMine.src = 'images/Minefield.png';
@@ -515,20 +538,30 @@ function renderMines(hasMineArray){
         })
     } else if (!toggleMines) {
         hasMineArray.forEach(function(el) {
-            document.getElementById(el.id).removeChild(document.querySelector('.imgMine'));
+            document.getElementById(el.id).innerHTML = '';
             if (el.hasFlag) {
                 let imgFlag = document.createElement('img');
                 imgFlag.src = 'images/Flag.png';
                 document.getElementById(el.id).appendChild(imgFlag);
                 imgFlag.classList.add('imgFlag');
-                imgFlagsEl = document.querySelectorAll('.imgFlag');
-                for (let i = 0; i < flagsPlanted; i++) {
-                    imgFlagsEl[i].addEventListener('mouseup', removeFlag);
-                }
             }
         })
     }
+    imgFlagsEl = document.querySelectorAll('.imgFlag');
+    for (let i = 0; i < flagsPlanted; i++) {
+        imgFlagsEl[i].addEventListener('mouseup', removeFlag);
+    }
 }
+
+function renderMinesFinal(hasMineArray) {
+    hasMineArray.forEach(function(el) {
+        document.getElementById(el.id).innerHTML = '';
+        let imgMine = document.createElement('img');
+        imgMine.src = 'images/Minefield.png';
+        document.getElementById(el.id).appendChild(imgMine);
+    })
+}
+
 function choosePlaylistMinesDeployed() {
     let option = Math.round(Math.random());
     playList = soundInit[option];
@@ -587,38 +620,7 @@ function toggleLore() {
         imgHammond.style.width = '280px';
         imgHammond.style.height = '230px';
         loreEl.append(imgHammond);
-        // document.getElementById(el.id).append(imgMine);
     } else if (!aboutEl.classList.contains('show')) {
         document.getElementById('right').removeChild(document.querySelector('.lore'));
     }
 }
-
-
-
-
-// Next steps:
-// x 1. Display Total no of bombs to be cleared
-// x 2. add boardState property of validMove, default is true, once clicked it should be false -> change cell colour for now
-// x 3. add hover effect for validMove = true cells
-
-// x 4. detect if bomb is triggered -> triggers game win loss condition
-// x 5. reveal number of bombs in surrounding cells
-
-// x 5.5. Added a function to check win condition -> has the player revealed ALL non-mine tiles? if so then game is won
-// x 6. right click to place flags -> toggle right-clickable status but only if cell is validMove = true
-
-// x 7. Work on visual and sound effects -> graphics to replace the mine and flag (new OW2 ping and voiceline) placeholders, 
-// and play sound clips on certain events: mine hit, overtime music when one or two mines left, minefied deployed
-// x 7.0.1 Layout: revise wireframe and search for appropriately sized images to use as background
-        // List of sound clips needed: ping voice lines (up to 3, make it so it doesn't always play)
-        //                             minefield deployed (should be 2. "minefield deployed" and "area denied")
-        //                             mine hit (Hammond voice lines, find a few and play one at random when gameOver)
-        //                              mine explosion sound
-                                    //    sonic arrow voicelines
-        //                             Overtime music
-        //                             OW intro music
-        //                             Victory music and voiceline (Narrator)
-        //                             Defeat voiceline (Narrator)
-// x 7.1 Added functionality to the Dev Mode button to toggle the display of the mines ON/OFF
-// x 7.2 Replace the numPeripheralMines text-based number with a colourful graphic of the number.
-// 8. Cascading logic -> sonic arrow animation?
