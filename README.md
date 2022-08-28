@@ -7,15 +7,15 @@ This project is a recreation of the classic game of Minesweeper, with a twist on
 
 ## Screenshots
 
-![Game screen on load] (https://i.imgur.com/b77LxUz.png)
+![Game screen on load](https://i.imgur.com/b77LxUz.png)
 
 Upon loading the game, the user will see the main screen. The user may choose to read the lore on the right-side of the screen, or pick a difficulty at the bottom left to begin playing.
 
-![Game screen during gameplay] (https://i.imgur.com/XuKymRh.png)
+![Game screen during gameplay](https://i.imgur.com/XuKymRh.png)
 
 Users may pick any difficulty they would like; higher difficulties feature larger grids and more mines. At any point, the user can press the Reset button at the bottom to start again.
 
-![Victory] (https://i.imgur.com/uIobuux.png)
+![Victory](https://i.imgur.com/uIobuux.png)
 
 When the game is over, whether the user wins or loses, the locations of the mines on the grid will be revealed.
 
@@ -72,7 +72,11 @@ https://github.com/louischeung1990/Minesweeper
 
 ## Next Steps
 
-First and foremost, while much effort was expended to hunt down and fix bugs, there will always be more to be found and addressed. Aside from this there are two main features that would be nice to implement:
+First and foremost, while much effort was expended to hunt down and fix bugs, there will always be more to be found and addressed. Aside from this there are a few features that would be nice to implement:
+
+* Short-term goals
+
+> Rebalance the audio volume and add separate volume controls for music/voice lines. Add a modal or new div in the game area for post-game results screen.
 
 * Animations
 
